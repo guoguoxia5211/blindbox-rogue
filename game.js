@@ -68,13 +68,26 @@ class Game {
         this.log = [];
     }
     
+    showGuide() {
+        document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('guideScreen').style.display = 'block';
+    }
+    
     start() {
         document.getElementById('startScreen').style.display = 'none';
+        document.getElementById('guideScreen').style.display = 'none';
         this.addLog('=== 冒险开始 ===', 'event');
-        this.addLog('探索地牢，收集盲盒，击败魔龙！');
+        this.addLog('💡 提示：点击【探索】获得盲盒，然后【开盲盒】变强！', 'log-epic');
+        this.addLog('🎯 目标：击败 15 层的魔龙 BOSS！', 'log-epic');
         
         // 初始赠送一个盲盒
         this.addBlindbox();
+        
+        // 显示欢迎提示
+        setTimeout(() => {
+            this.addLog('🎁 新手礼包：赠送盲盒 x1', 'log-loot');
+            this.addLog('👆 点击盲盒或【开盲盒】按钮开启', 'log-event');
+        }, 1000);
         
         this.updateUI();
     }
@@ -198,7 +211,7 @@ class Game {
     // 探索
     explore() {
         if (this.inBattle) {
-            this.addLog('正在战斗中！');
+            this.addLog('正在战斗中！', 'log-combat');
             return;
         }
         
@@ -210,7 +223,7 @@ class Game {
         } else if (rand < 0.7) {
             // 获得盲盒
             this.addBlindbox();
-            this.addLog('🎁 发现一个盲盒！', 'log-loot');
+            this.addLog('🎁 发现一个盲盒！快去开启吧！', 'log-loot');
         } else if (rand < 0.85) {
             // 获得金币
             const gold = Math.floor(Math.random() * 20) + 10;
@@ -234,7 +247,8 @@ class Game {
         this.currentEnemy = { ...enemyTemplate, maxHp: enemyTemplate.hp };
         this.inBattle = true;
         
-        this.addLog(`⚔️ 遭遇 ${this.currentEnemy.name}！`, 'log-combat');
+        this.addLog(`⚔️ 遭遇 ${this.currentEnemy.name}！HP:${this.currentEnemy.hp} 攻:${this.currentEnemy.attack}`, 'log-combat');
+        this.addLog('💡 提示：战斗自动进行，无需操作', 'log-event');
         
         // 显示战斗场景
         document.getElementById('blindboxDisplay').style.display = 'none';
@@ -320,7 +334,7 @@ class Game {
         // 几率掉落盲盒
         if (Math.random() < 0.5) {
             this.addBlindbox();
-            this.addLog('🎁 敌人掉落了一个盲盒！', 'log-loot');
+            this.addLog('🎁 敌人掉落了一个盲盒！运气不错！', 'log-loot');
         }
         
         // 升级
@@ -346,6 +360,24 @@ class Game {
             this.player.luck += 1;
             
             this.addLog(`🎉 升级！当前等级：${this.player.level}`, 'log-epic');
+            this.addLog('❤️ 生命 +20，⚔️ 攻击 +3，🍀 幸运 +1', 'log-epic');
+            this.addLog('💡 提示：幸运越高，越容易开出高品质盲盒！', 'log-event');
+        }
+    }
+    
+    // 检查升级
+    checkLevelUp() {
+        const expNeeded = this.player.level * 50;
+        
+        if (this.player.exp >= expNeeded) {
+            this.player.level++;
+            this.player.exp -= expNeeded;
+            this.player.maxHp += 20;
+            this.player.hp = this.player.maxHp;
+            this.player.attack += 3;
+            this.player.luck += 1;
+            
+            this.addLog(`🎉 升级！当前等级：${this.player.level}`, 'log-epic');
             this.addLog('生命 +20，攻击 +3，幸运 +1', 'log-epic');
         }
     }
@@ -353,7 +385,7 @@ class Game {
     // 显示背包
     showBag() {
         if (this.player.bag.length === 0) {
-            this.addLog('背包是空的');
+            this.addLog('🎒 背包是空的，探索时收集消耗品吧！', 'log-event');
             return;
         }
         
@@ -367,8 +399,10 @@ class Game {
         if (potionIndex >= 0 && this.player.hp < this.player.maxHp) {
             const potion = this.player.bag.splice(potionIndex, 1)[0];
             this.player.hp = Math.min(this.player.maxHp, this.player.hp + potion.heal);
-            this.addLog(`使用了 ${potion.name}，恢复 ${potion.heal} 生命`, 'log-heal');
+            this.addLog(`🧪 自动使用了 ${potion.name}，恢复 ${potion.heal} 生命`, 'log-heal');
             this.updateUI();
+        } else if (this.player.hp >= this.player.maxHp) {
+            this.addLog('💚 生命已满，无需使用血瓶', 'log-heal');
         }
     }
     

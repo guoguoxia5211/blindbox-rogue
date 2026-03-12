@@ -374,7 +374,63 @@
     <div id="startScreen">
         <h1>🎁 盲盒勇者</h1>
         <p class="subtitle">Blind Box Rogue v1.0.0</p>
-        <button class="big-btn" onclick="game.start()">开始冒险</button>
+        <button class="big-btn" onclick="game.showGuide()">开始冒险</button>
+    </div>
+    
+    <!-- 新手引导 -->
+    <div id="guideScreen" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 150; padding: 20px; overflow-y: auto;">
+        <h2 style="color: #4af; text-align: center; margin-bottom: 20px;">📖 新手指南</h2>
+        
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+            <h3 style="color: #4f4; margin-bottom: 10px;">🎯 游戏目标</h3>
+            <p style="color: #ccc; line-height: 1.6;">
+                探索地牢 → 收集盲盒 → 开启装备 → 变强 → 击败魔龙 BOSS
+            </p>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+            <h3 style="color: #fa0; margin-bottom: 10px;">🎁 盲盒品质</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; font-size: 13px;">
+                <div><span style="color: #999;">⚪ 凡品</span> - 40% 概率</div>
+                <div><span style="color: #4f4;">🟢 优品</span> - 30% 概率</div>
+                <div><span style="color: #44f;">🔵 精品</span> - 20% 概率</div>
+                <div><span style="color: #a4f;">🟣 稀有</span> - 7% 概率</div>
+                <div><span style="color: #fa0;">🟡 传说</span> - 2.5% 概率</div>
+                <div><span style="color: #f00;">🔴 隐藏</span> - 0.5% 概率</div>
+            </div>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+            <h3 style="color: #f44; margin-bottom: 10px;">⚔️ 战斗系统</h3>
+            <p style="color: #ccc; line-height: 1.6;">
+                • 自动回合制战斗<br>
+                • 10% 基础暴击率 + 幸运加成<br>
+                • 伤害 = 攻击 - 防御<br>
+                • 击败敌人获得金币和经验
+            </p>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+            <h3 style="color: #4af; margin-bottom: 10px;">🎮 操作说明</h3>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; font-size: 13px;">
+                <div>🔍 <b>探索</b> - 随机事件</div>
+                <div>🎁 <b>开盲盒</b> - 获得装备</div>
+                <div>🎒 <b>背包</b> - 使用血瓶</div>
+                <div>⭐ <b>升级</b> - 属性提升</div>
+            </div>
+        </div>
+        
+        <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+            <h3 style="color: #f4f; margin-bottom: 10px;">💡 新手提示</h3>
+            <p style="color: #ccc; line-height: 1.6;">
+                • 幸运属性影响高品质概率<br>
+                • 血瓶在背包界面自动使用<br>
+                • 战斗无法开盲盒，先击败敌人<br>
+                • 多开盲盒收集更强装备
+            </p>
+        </div>
+        
+        <button class="big-btn" onclick="game.start()" style="width: 100%; margin-top: 20px;">我明白了，开始游戏！</button>
     </div>
     
     <div id="gameContainer">
