@@ -186,17 +186,59 @@ class Game {
         
         // 应用物品
         if (blindbox.type === 'weapons') {
-            const oldAtk = this.player.equipment.weapon?.attack || 0;
-            this.player.equipment.weapon = item;
-            this.player.attack = 10 + item.attack;
-            this.addLog(`获得武器：${item.name} (攻击 +${item.attack})`, `log-${rarity.toLowerCase()}`);
+            const oldWeapon = this.player.equipment.weapon;
+            const oldAtk = oldWeapon?.attack || 0;
+            
+            // 如果新武器更好，替换
+            if (item.attack > oldAtk) {
+                this.player.equipment.weapon = item;
+                this.player.attack = 10 + item.attack;
+                this.addLog(`获得武器：${item.name} (攻击 +${item.attack})`, `log-${rarity.toLowerCase()}`);
+                
+                // 旧武器存入背包
+                if (oldWeapon) {
+                    this.player.bag.push(oldWeapon);
+                    this.addLog(`🎒 旧武器 ${oldWeapon.name} 存入背包`, 'log-event');
+                }
+                
+                if (rarity === 'EPIC' || rarity === 'LEGENDARY' || rarity === 'HIDDEN') {
+                    this.addLog(`🎉 ${RARITY[rarity].name}武器！运气爆棚！`, `log-${rarity.toLowerCase()}`);
+                }
+            } else {
+                // 不如当前的，存入背包
+                this.player.bag.push(item);
+                this.addLog(`获得武器：${item.name} (攻击 +${item.attack})，已存入背包`, `log-${rarity.toLowerCase()}`);
+                this.addLog('💡 提示：背包中的装备可在需要时查看', 'log-event');
+            }
         } else if (blindbox.type === 'armors') {
-            this.player.equipment.armor = item;
-            this.player.defense = item.defense;
-            this.addLog(`获得护甲：${item.name} (防御 +${item.defense})`, `log-${rarity.toLowerCase()}`);
+            const oldArmor = this.player.equipment.armor;
+            const oldDef = oldArmor?.defense || 0;
+            
+            // 如果新护甲更好，替换
+            if (item.defense > oldDef) {
+                this.player.equipment.armor = item;
+                this.player.defense = item.defense;
+                this.addLog(`获得护甲：${item.name} (防御 +${item.defense})`, `log-${rarity.toLowerCase()}`);
+                
+                // 旧护甲存入背包
+                if (oldArmor) {
+                    this.player.bag.push(oldArmor);
+                    this.addLog(`🎒 旧护甲 ${oldArmor.name} 存入背包`, 'log-event');
+                }
+                
+                if (rarity === 'EPIC' || rarity === 'LEGENDARY' || rarity === 'HIDDEN') {
+                    this.addLog(`🎉 ${RARITY[rarity].name}护甲！运气爆棚！`, `log-${rarity.toLowerCase()}`);
+                }
+            } else {
+                // 不如当前的，存入背包
+                this.player.bag.push(item);
+                this.addLog(`获得护甲：${item.name} (防御 +${item.defense})，已存入背包`, `log-${rarity.toLowerCase()}`);
+                this.addLog('💡 提示：背包中的装备可在需要时查看', 'log-event');
+            }
         } else if (blindbox.type === 'potions') {
             this.player.bag.push(item);
-            this.addLog(`获得消耗品：${item.name}`, `log-${rarity.toLowerCase()}`);
+            this.addLog(`获得消耗品：${item.name} (恢复${item.heal}生命)`, `log-${rarity.toLowerCase()}`);
+            this.addLog('💡 提示：血瓶在打开背包时自动使用', 'log-event');
         }
         
         // 稀有度提示
@@ -385,25 +427,55 @@ class Game {
     // 显示背包
     showBag() {
         if (this.player.bag.length === 0) {
-            this.addLog('🎒 背包是空的，探索时收集消耗品吧！', 'log-event');
+            this.addLog('🎒 背包是空的', 'log-event');
+            this.addLog('💡 说明：背包用于存放消耗品和备用装备', 'log-event');
+            this.addLog('• 血瓶 - 战斗外自动使用', 'log-event');
+            this.addLog('• 备用装备 - 点击可替换当前装备', 'log-event');
             return;
         }
         
-        this.addLog('=== 背包 ===', 'log-event');
-        this.player.bag.forEach((item, i) => {
-            this.addLog(`${i+1}. ${item.emoji} ${item.name}`, 'log-loot');
-        });
+        this.addLog('=== 🎒 背包 ===', 'log-event');
         
-        // 自动使用第一个血瓶
-        const potionIndex = this.player.bag.findIndex(item => item.heal);
-        if (potionIndex >= 0 && this.player.hp < this.player.maxHp) {
-            const potion = this.player.bag.splice(potionIndex, 1)[0];
-            this.player.hp = Math.min(this.player.maxHp, this.player.hp + potion.heal);
-            this.addLog(`🧪 自动使用了 ${potion.name}，恢复 ${potion.heal} 生命`, 'log-heal');
-            this.updateUI();
-        } else if (this.player.hp >= this.player.maxHp) {
-            this.addLog('💚 生命已满，无需使用血瓶', 'log-heal');
+        // 分类显示
+        const potions = this.player.bag.filter(item => item.heal);
+        const equipments = this.player.bag.filter(item => item.attack || item.defense);
+        const others = this.player.bag.filter(item => !item.heal && !item.attack && !item.defense);
+        
+        if (potions.length > 0) {
+            this.addLog(`【消耗品】${potions.length} 个`, 'log-loot');
+            potions.forEach(item => {
+                this.addLog(`  🧪 ${item.name} - 恢复${item.heal}生命`, 'log-heal');
+            });
+            // 自动使用血瓶
+            if (this.player.hp < this.player.maxHp) {
+                const potion = potions[0];
+                const index = this.player.bag.indexOf(potion);
+                this.player.bag.splice(index, 1);
+                this.player.hp = Math.min(this.player.maxHp, this.player.hp + potion.heal);
+                this.addLog(`🧪 自动使用了 ${potion.name}，恢复 ${potion.heal} 生命`, 'log-heal');
+            } else {
+                this.addLog('💚 生命已满', 'log-heal');
+            }
         }
+        
+        if (equipments.length > 0) {
+            this.addLog(`【装备】${equipments.length} 件`, 'log-loot');
+            equipments.forEach(item => {
+                const atk = item.attack ? `攻击 +${item.attack}` : '';
+                const def = item.defense ? `防御 +${item.defense}` : '';
+                this.addLog(`  ${item.emoji} ${item.name} - ${atk} ${def}`, 'log-rare');
+            });
+            this.addLog('💡 提示：探索获得更好装备时自动替换，旧的存入背包', 'log-event');
+        }
+        
+        if (others.length > 0) {
+            this.addLog(`【其他】${others.length} 个`, 'log-loot');
+            others.forEach(item => {
+                this.addLog(`  ${item.emoji} ${item.name}`, 'log-event');
+            });
+        }
+        
+        this.updateUI();
     }
     
     // 游戏结束
