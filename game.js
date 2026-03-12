@@ -289,15 +289,25 @@ class Game {
         this.currentEnemy = { ...enemyTemplate, maxHp: enemyTemplate.hp };
         this.inBattle = true;
         
-        this.addLog(`⚔️ 遭遇 ${this.currentEnemy.name}！HP:${this.currentEnemy.hp} 攻:${this.currentEnemy.attack}`, 'log-combat');
-        this.addLog('💡 提示：战斗自动进行，无需操作', 'log-event');
+        this.addLog(`⚔️ 遭遇 ${this.currentEnemy.name}！`, 'log-combat');
         
         // 显示战斗场景
-        document.getElementById('blindboxDisplay').style.display = 'none';
-        document.getElementById('battleScene').style.display = 'flex';
-        document.getElementById('enemySprite').textContent = this.currentEnemy.emoji;
-        document.getElementById('enemyName').textContent = this.currentEnemy.name;
+        document.getElementById('blindboxArea').style.display = 'none';
+        document.getElementById('enemyArea').style.display = 'block';
+        document.getElementById('battleInfo').style.display = 'block';
+        
+        const enemySprite = document.getElementById('enemySprite');
+        enemySprite.textContent = this.currentEnemy.emoji;
+        enemySprite.style.animation = 'enemyIdle 1s infinite';
+        
+        document.getElementById('battleLog').textContent = `${this.currentEnemy.name} HP:${this.currentEnemy.hp}`;
+        
         this.updateEnemyUI();
+        
+        // 遭遇提示
+        setTimeout(() => {
+            this.addLog('💡 战斗自动进行，观看即可！', 'log-event');
+        }, 1000);
         
         // 自动战斗
         setTimeout(() => this.battleRound(), 800);
@@ -308,6 +318,12 @@ class Game {
         if (!this.inBattle) return;
         
         const enemy = this.currentEnemy;
+        const heroSprite = document.getElementById('heroSprite');
+        const enemySprite = document.getElementById('enemySprite');
+        
+        // 玩家攻击动画
+        heroSprite.style.animation = 'attack 0.3s';
+        setTimeout(() => heroSprite.style.animation = 'heroIdle 2s infinite', 300);
         
         // 玩家攻击
         let damage = Math.max(1, this.player.attack);
@@ -316,11 +332,17 @@ class Game {
         if (Math.random() < 0.1 + (this.player.luck * 0.01)) {
             damage *= 2;
             this.addLog('💥 暴击！', 'log-combat');
+            this.showEffect('crit');
         }
         
         enemy.hp -= damage;
         this.showDamage(damage);
-        this.addLog(`你攻击 ${enemy.name}，造成 ${damage} 伤害`, 'log-combat');
+        document.getElementById('battleLog').textContent = `你攻击！造成 ${damage} 伤害`;
+        
+        // 敌人受击动画
+        enemySprite.style.animation = 'shake 0.3s';
+        setTimeout(() => enemySprite.style.animation = 'enemyIdle 1s infinite', 300);
+        
         this.updateEnemyUI();
         
         if (enemy.hp <= 0) {
@@ -332,9 +354,19 @@ class Game {
         setTimeout(() => {
             if (!this.inBattle) return;
             
+            // 敌人攻击动画
+            enemySprite.style.animation = 'attack 0.3s';
+            setTimeout(() => enemySprite.style.animation = 'enemyIdle 1s infinite', 300);
+            
             let enemyDamage = Math.max(1, enemy.attack - Math.floor(this.player.defense / 2));
             this.player.hp -= enemyDamage;
-            this.addLog(`${enemy.name} 攻击你，造成 ${enemyDamage} 伤害`, 'log-combat');
+            
+            // 玩家受击动画
+            heroSprite.style.animation = 'shake 0.3s, flash 0.3s';
+            setTimeout(() => heroSprite.style.animation = 'heroIdle 2s infinite', 300);
+            
+            this.showDamage(enemyDamage, true);
+            document.getElementById('battleLog').textContent = `${enemy.name} 反击！造成 ${enemyDamage} 伤害`;
             
             if (this.player.hp <= 0) {
                 this.gameOver();
@@ -343,22 +375,40 @@ class Game {
             this.updateUI();
             
             if (this.inBattle) {
-                setTimeout(() => this.battleRound(), 1000);
+                setTimeout(() => this.battleRound(), 1200);
             }
-        }, 800);
+        }, 600);
     }
     
     // 显示伤害数字
-    showDamage(amount) {
-        const battleScene = document.getElementById('battleScene');
+    showDamage(amount, isPlayer = false) {
+        const scene = document.getElementById('sceneDisplay');
         const damageEl = document.createElement('div');
         damageEl.className = 'damage-number';
         damageEl.textContent = `-${amount}`;
-        damageEl.style.left = '50%';
-        damageEl.style.top = '30%';
-        battleScene.appendChild(damageEl);
+        damageEl.style.left = isPlayer ? '30%' : '70%';
+        damageEl.style.top = '40%';
+        damageEl.style.color = isPlayer ? '#f44' : '#fa0';
+        scene.appendChild(damageEl);
         
         setTimeout(() => damageEl.remove(), 1000);
+    }
+    
+    // 显示特效
+    showEffect(type) {
+        const scene = document.getElementById('sceneDisplay');
+        const effectEl = document.createElement('div');
+        
+        if (type === 'crit') {
+            effectEl.textContent = '💥';
+            effectEl.style.fontSize = '40px';
+            effectEl.style.position = 'absolute';
+            effectEl.style.left = '70%';
+            effectEl.style.top = '30%';
+            effectEl.style.animation = 'floatUp 1s forwards';
+            scene.appendChild(effectEl);
+            setTimeout(() => effectEl.remove(), 1000);
+        }
     }
     
     // 战斗胜利
@@ -373,6 +423,9 @@ class Game {
         this.addLog(`✨ 击败了 ${enemy.name}！`, 'log-loot');
         this.addLog(`获得 ${enemy.gold} 金币，${enemy.exp} 经验`, 'log-loot');
         
+        // 胜利特效
+        this.showEffect('victory');
+        
         // 几率掉落盲盒
         if (Math.random() < 0.5) {
             this.addBlindbox();
@@ -383,10 +436,33 @@ class Game {
         this.checkLevelUp();
         
         // 恢复 UI
-        document.getElementById('battleScene').style.display = 'none';
-        document.getElementById('blindboxDisplay').style.display = 'flex';
+        setTimeout(() => {
+            document.getElementById('enemyArea').style.display = 'none';
+            document.getElementById('battleInfo').style.display = 'none';
+            document.getElementById('blindboxArea').style.display = 'block';
+        }, 1000);
         
         this.updateUI();
+    }
+    
+    // 胜利特效
+    showEffect(type) {
+        if (type === 'victory') {
+            const scene = document.getElementById('sceneDisplay');
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const effectEl = document.createElement('div');
+                    effectEl.textContent = ['✨', '🎉', '⭐', '💫', '🌟'][i];
+                    effectEl.style.fontSize = '30px';
+                    effectEl.style.position = 'absolute';
+                    effectEl.style.left = (30 + Math.random() * 40) + '%';
+                    effectEl.style.top = (30 + Math.random() * 40) + '%';
+                    effectEl.style.animation = 'floatUp 1s forwards';
+                    scene.appendChild(effectEl);
+                    setTimeout(() => effectEl.remove(), 1000);
+                }, i * 100);
+            }
+        }
     }
     
     // 检查升级
@@ -501,6 +577,36 @@ class Game {
         const expNeeded = this.player.level * 50;
         document.getElementById('exp').textContent = `${this.player.exp}/${expNeeded}`;
         document.getElementById('luck').textContent = this.player.luck;
+        
+        // 更新场景显示
+        document.getElementById('sceneFloor').textContent = this.floor;
+        
+        // 更新装备显示
+        const weaponEmoji = this.player.equipment.weapon?.emoji || '👊';
+        const armorEmoji = this.player.equipment.armor?.emoji || '👕';
+        document.getElementById('heroWeapon').textContent = weaponEmoji;
+        document.getElementById('heroArmor').textContent = armorEmoji;
+        
+        // 根据装备品质设置颜色
+        if (this.player.equipment.weapon) {
+            document.getElementById('heroWeapon').style.color = this.getRarityColor(this.player.equipment.weapon.rarity || 'COMMON');
+        }
+        if (this.player.equipment.armor) {
+            document.getElementById('heroArmor').style.color = this.getRarityColor(this.player.equipment.armor.rarity || 'COMMON');
+        }
+    }
+    
+    // 获取品质颜色
+    getRarityColor(rarity) {
+        const colors = {
+            'COMMON': '#999',
+            'UNCOMMON': '#4f4',
+            'RARE': '#44f',
+            'EPIC': '#a4f',
+            'LEGENDARY': '#fa0',
+            'HIDDEN': '#f00'
+        };
+        return colors[rarity] || '#fff';
     }
     
     updateEnemyUI() {

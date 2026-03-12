@@ -139,6 +139,33 @@
             50% { transform: translateY(-10px); }
         }
         
+        @keyframes heroIdle {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes enemyIdle {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            50% { transform: scale(1.1) rotate(5deg); }
+        }
+        
+        @keyframes attack {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(30px); }
+            100% { transform: translateX(0); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
         @keyframes pulse {
             0%, 100% { box-shadow: 0 0 20px #f00; }
             50% { box-shadow: 0 0 40px #f00; }
@@ -463,25 +490,44 @@
         
         <!-- 游戏区域 -->
         <div id="gameArea">
-            <!-- 盲盒展示 -->
-            <div id="blindboxDisplay">
-                <div class="blindbox" id="mainBlindbox" onclick="game.openBlindbox()">🎁</div>
-            </div>
-            
-            <!-- 战斗场景 -->
-            <div id="battleScene">
-                <div class="enemy" id="enemySprite">👾</div>
-                <div id="enemyInfo" style="text-align: center;">
-                    <div id="enemyName" style="font-size: 18px; margin-bottom: 5px;">史莱姆</div>
-                    <div style="width: 150px; height: 10px; background: #333; border-radius: 5px; margin: 0 auto;">
-                        <div id="enemyHpBar" style="width: 100%; height: 100%; background: #f44; border-radius: 5px; transition: width 0.3s;"></div>
+            <!-- 场景展示 -->
+            <div id="sceneDisplay" style="position: relative; height: 250px; background: linear-gradient(180deg, #2a2a4a 0%, #1a1a2e 100%); border-radius: 15px; overflow: hidden; margin-bottom: 15px;">
+                <!-- 背景装饰 -->
+                <div style="position: absolute; top: 10px; left: 10px; font-size: 12px; color: #666;">🏰 地牢第 <span id="sceneFloor">1</span> 层</div>
+                
+                <!-- 角色区域 -->
+                <div id="characterArea" style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); text-align: center;">
+                    <!-- 勇者形象 -->
+                    <div id="heroSprite" style="font-size: 60px; animation: heroIdle 2s infinite;">🧙</div>
+                    <!-- 装备显示 -->
+                    <div id="heroEquipment" style="font-size: 12px; color: #888; margin-top: 5px;">
+                        <span id="heroWeapon">⚔️</span>
+                        <span id="heroArmor" style="margin-left: 8px;">🛡️</span>
                     </div>
-                    <div id="enemyHpText" style="font-size: 12px; margin-top: 3px;">20/20</div>
                 </div>
+                
+                <!-- 敌人区域 -->
+                <div id="enemyArea" style="display: none; position: absolute; bottom: 20px; right: 50px; text-align: center;">
+                    <div id="enemySprite" style="font-size: 60px; animation: enemyIdle 1s infinite;">👾</div>
+                    <div id="enemyHpDisplay" style="width: 60px; height: 6px; background: #333; border-radius: 3px; margin: 5px auto;">
+                        <div id="enemyHpBar" style="width: 100%; height: 100%; background: #f44; border-radius: 3px;"></div>
+                    </div>
+                </div>
+                
+                <!-- 盲盒区域 -->
+                <div id="blindboxArea" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">
+                    <div class="blindbox" id="mainBlindbox" onclick="game.openBlindbox()">🎁</div>
+                </div>
+                
+                <!-- 战斗特效层 -->
+                <div id="battleEffects" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none;"></div>
             </div>
             
-            <!-- 地图 -->
-            <div id="mapDisplay"></div>
+            <!-- 战斗信息 -->
+            <div id="battleInfo" style="display: none; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                <div style="text-align: center; color: #f44; font-size: 16px;">⚔️ 战斗中 ⚔️</div>
+                <div id="battleLog" style="text-align: center; color: #888; font-size: 13px; margin-top: 5px;"></div>
+            </div>
         </div>
         
         <!-- 日志 -->
